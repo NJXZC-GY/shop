@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+	
+	<!-- 此处记得改 -->
+	<typeAliases>
+    	<typeAlias alias="" type=""/>
+    	<typeAlias alias="" type=""/>
+    </typeAliases>
+    
+    <!-- 此处记得改 -->
+    <mappers>
+        <mapper class=""/>
+        <mapper class=""/>
+	</mappers>
+
+</configuration>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neu.project1.mapper.AddressMapper">
+    <resultMap id="baseAddressResultMap" type="Address">
+        <id column="ADDRESS_ID" property="addressId"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="ADDRESS" property="address"/>
+        <result column="PHONE" property="phone"/>
+        <result column="LINKMAN" property="linkman"/>
+        <result column="DEFAULT_ADDRESS" property="defaultAddress"/>
+        <result column="ADDRESS_NOTE" property="addressNote"/>
+    </resultMap>
+
+    <!--findDefaultAddressByUserId(Address address);-->
+    <select id="findDefaultAddressByUserId" parameterType="int" resultMap="baseAddressResultMap">
+        SELECT ADDRESS_ID,USER_ID,ADDRESS,PHONE,LINKMAN,DEFAULT_ADDRESS,ADDRESS_NOTE FROM address
+        WHERE USER_ID=#{VALUE} AND DEFAULT_ADDRESS =1
+    </select>
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neu.project1.mapper.OrderDetailMapper">
+
+    <resultMap id="baseOrderDetailResultMap" type="Address">
+        <id column="ORDER_DETAIL_ID" property="orderDetailId"/>
+        <result column="ORDER_ID" property="orderId"/>
+        <result column="ITEM_ID" property="itemId"/>
+        <result column="BUY_COUNT" property="buyCount"/>
+    </resultMap>
+
+    <!--insertOrderDetail(OrderDetail orderDetail);-->
+    <insert id="insertOrderDetail" parameterType="OrderDetail">
+        INSERT INTO orderdetail (ORDER_ID,ITEM_ID,BUY_COUNT) VALUES (#{orderId},#{itemId},#{buyCount})
+    </insert>
+</mapper>

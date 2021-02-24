@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neu.project1.mapper.UserMapper">
+    <!--id需要和UserMapper中 方法名一致   resultType和返回值类型一致    没有需要录入的参数就没使用parameterType -->
+    <select id="findAllUsers2" resultType="User">
+        SELECT USER_ID userId,USER_NAME userName,pwd,sex,birth,state,role,USER_IMAGE userImage,phone,score,balance FROM user
+    </select>
+    <resultMap id="userBaseResultMap" type="User">
+        <id column="USER_ID" property="userId"/>
+        <result column="USER_NAME" property="userName"/>
+        <result column="PWD" property="pwd"/>
+        <result column="SEX" property="sex"/>
+        <result column="BIRTH" property="birth"/>
+        <result column="STATE" property="state"/>
+        <result column="ROLE" property="role"/>
+        <result column="USER_IMAGE" property="userImage"/>
+        <result column="PHONE" property="phone"/>
+        <result column="SCORE" property="score"/>
+        <result column="BALANCE" property="balance"/>
+    </resultMap>
+    <!--可以查询出用户、订单、收货地址   -->
+    <resultMap id="userAndOrderAndAddressResultMap" type="User" extends="userBaseResultMap">
+        <collection property="userOrderList" ofType="UserOrder">
+            <id column="ORDER_ID" property="orderId"/>
+            <result column="USER_ID" property="userId"/>
+            <result column="ADDRESS_ID" property="addressId"/>
+            <result column="ORDER_TIME" property="orderTime"/>
+            <result column="GET_TIME" property="getTime"/>
+            <result column="TOTAL" property="total"/>
+            <result column="NOTE" property="note"/>
+            <!--一个订单  只可能对应一个 地址  还需要再进行一次一对一映射-->
+            <association property="address" javaType="Address">
+                <id column="ADDRESS_ID" property="addressId"/>
+                <result column="USER_ID" property="userId"/>
+                <result column="ADDRESS" property="address"/>
+                <result column="PHONE" property="phone"/>
+                <result column="LINKMAN" property="linkman"/>
+                <result column="DEFAULT_ADDRESS" property="defaultAddress"/>
+                <result column="ADDRESS_NOTE" property="addressNote"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <!--根据用户编号，查询用户的所有订单及订单的地址  还有其他信息需要获取的话，请自行补充 列名-->
+    <select id="findUserAndOrders" parameterType="int" resultMap="userAndOrderAndAddressResultMap">
+        SELECT u.USER_ID,u.USER_NAME ,o.ORDER_ID,o.ORDER_TIME,o.TOTAL,a.ADDRESS_ID,a.ADDRESS,a.PHONE,
+        a.LINKMAN
+        FROM user u JOIN userorder o ON(u.USER_ID=o.USER_ID)
+        JOIN ADDRESS a ON(a.ADDRESS_ID=o.ADDRESS_ID) WHERE o.USER_ID = #{VALUE}
+    </select>
+</mapper>

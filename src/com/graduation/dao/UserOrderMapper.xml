@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neu.project1.mapper.UserOrderMapper">
+
+    <!--订单基础resultMap-->
+    <resultMap id="userOrderBaseResultMap" type="UserOrder">
+        <id column="ORDER_ID" property="orderId"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="ADDRESS_ID" property="addressId"/>
+        <result column="ORDER_TIME" property="orderTime"/>
+        <result column="GET_TIME" property="getTime"/>
+        <result column="TOTAL" property="total"/>
+        <result column="NOTE" property="note"/>
+    </resultMap>
+    <!--查询订单及地址resultMap-->
+    <resultMap id="userOrderAndAddressResultMap" type="UserOrder" extends="userOrderBaseResultMap">
+        <!--一个订单  只可能对应一个 地址  还需要再进行一次一对一映射-->
+        <association property="address" javaType="Address">
+            <id column="ADDRESS_ID" property="addressId"/>
+            <result column="USER_ID" property="userId"/>
+            <result column="ADDRESS" property="address"/>
+            <result column="PHONE" property="phone"/>
+            <result column="LINKMAN" property="linkman"/>
+            <result column="DEFAULT_ADDRESS" property="defaultAddress"/>
+            <result column="ADDRESS_NOTE" property="addressNote"/>
+        </association>
+    </resultMap>
+
+    <!--查询订单 地址  订单详情及商品的ResultMap  除了在继承userOrderAndAddressResultMap 还需要一对多映射订单详情-->
+    <resultMap id="userOrderAndAddressAndDescResultMap" type="UserOrder" extends="userOrderAndAddressResultMap">
+        <!--订单对应订单详情 一对多-->
+        <collection property="orderDetailList" ofType="OrderDetail">
+            <id column="ORDER_DETAIL_ID" property="orderDetailId"/>
+            <result column="ORDER_ID" property="orderId"/>
+            <result column="ITEM_ID" property="itemId"/>
+            <result column="BUY_COUNT" property="buyCount"/>
+            <!--详情对应商品 一对一-->
+            <association property="item" javaType="Item">
+                <id column="ITEM_ID" property="itemId"/>
+                <result column="ITEM_NAME" property="itemName"/>
+                <result column="ITEM_PRICE" property="itemPrice"/>
+                <result column="ITEM_COUNT" property="itemCount"/>
+                <result column="ITEM_CREATE_TIME" property="itemCreateTime"/>
+                <result column="ITEM_DESC" property="itemDesc"/>
+                <result column="ITEM_TYPE_ID" property="itemTypeId"/>
+                <result column="ITEM_SALE_PRICE" property="itemSalePrice"/>
+                <result column="ITEM_STATE" property="itemState"/>
+                <result column="ITEM_IMAGE_MAIN" property="itemImageMain"/>
+                <result column="ITEM_IMAGE_OTHER" property="itemImageOther"/>
+                <result column="ITEM_VIDEO_URL" property="itemVideoUrl"/>
+                <result column="ITEM_HEART" property="itemHeart"/>
+            </association>
+        </collection>
+    </resultMap>
+    <!--findOrderAndAddress(int userId);-->
+    <select id="findOrderAndAddress" resultMap="userOrderAndAddressResultMap" parameterType="int">
+        SELECT o.ORDER_ID,o.ORDER_TIME,o.TOTAL,a.ADDRESS_ID,a.ADDRESS,a.PHONE,a.LINKMAN FROM userorder o
+        JOIN ADDRESS a ON(a.ADDRESS_ID=o.ADDRESS_ID) WHERE o.USER_ID = #{VALUE}
+    </select>
+
+    <!--findOrderAndAddressAndDesc(int orderId);  其他信息如果需要使用，再查询，自己编写-->
+    <select id="findOrderAndAddressAndDesc" resultMap="userOrderAndAddressAndDescResultMap" parameterType="int">
+        SELECT o.ORDER_ID,o.ORDER_TIME,o.GET_TIME,o.TOTAL,a.ADDRESS_ID,a.ADDRESS,a.PHONE,a.LINKMAN,
+        od.ORDER_DETAIL_ID,od.BUY_COUNT,i.ITEM_ID,i.ITEM_NAME,i.ITEM_SALE_PRICE,i.ITEM_IMAGE_MAIN
+        FROM userorder o JOIN ADDRESS a ON(a.ADDRESS_ID=o.ADDRESS_ID)
+        JOIN orderdetail od ON(od.ORDER_ID=o.ORDER_ID)
+        JOIN item i ON(i.ITEM_ID = od.ITEM_ID)
+        WHERE o.ORDER_ID = #{VALUE}
+    </select>
+
+    <!--insertUserOrder(UserOrder userOrder);-->
+    <insert id="insertUserOrder" parameterType="UserOrder">
+        INSERT INTO userorder (ORDER_ID,USER_ID,ADDRESS_ID,ORDER_TIME,GET_TIME,TOTAL,NOTE)
+        VALUES (#{orderId},#{userId},#{addressId},#{orderTime},#{getTime},#{total},#{note})
+    </insert>
+</mapper>

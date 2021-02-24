@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neu.project1.mapper.ItemMapper">
+
+    <resultMap id="itemBaseResultMap" type="Item">
+        <id column="ITEM_ID" property="itemId"/>
+        <result column="ITEM_NAME" property="itemName"/>
+        <result column="ITEM_PRICE" property="itemPrice"/>
+        <result column="ITEM_COUNT" property="itemCount"/>
+        <result column="ITEM_CREATE_TIME" property="itemCreateTime"/>
+        <result column="ITEM_DESC" property="itemDesc"/>
+        <result column="ITEM_TYPE_ID" property="itemTypeId"/>
+        <result column="ITEM_SALE_PRICE" property="itemSalePrice"/>
+        <result column="ITEM_STATE" property="itemState"/>
+        <result column="ITEM_IMAGE_MAIN" property="itemImageMain"/>
+        <result column="ITEM_IMAGE_OTHER" property="itemImageOther"/>
+        <result column="ITEM_VIDEO_URL" property="itemVideoUrl"/>
+        <result column="ITEM_HEART" property="itemHeart"/>
+    </resultMap>
+
+    <!--实现结果集  可以查询出商品及其商品类别-->
+    <resultMap id="itemInfoAndItemTypeResultMap" type="Item" extends="itemBaseResultMap">
+        <association property="itemType" javaType="ItemType">
+            <id column="ITEM_TYPE_ID" property="itemTypeId"/>
+            <result column="TYPE_NAME" property="typeName"/>
+            <result column="TYPE_DESC" property="typeDesc"/>
+        </association>
+    </resultMap>
+    <!--findAllItems-->
+    <select id="findAllItems" resultMap="itemBaseResultMap">
+        SELECT ITEM_ID,ITEM_NAME,ITEM_PRICE,ITEM_COUNT,ITEM_CREATE_TIME,ITEM_DESC,ITEM_TYPE_ID,ITEM_SALE_PRICE,
+         ITEM_STATE,ITEM_IMAGE_MAIN,ITEM_IMAGE_OTHER,ITEM_VIDEO_URL,ITEM_HEART FROM item
+    </select>
+
+    <!--findItemsByItemHeart-->
+    <select id="findItemsByItemHeart" resultMap="itemBaseResultMap">
+        <include refid="allColumns"></include> ORDER BY ITEM_HEART DESC LIMIT 0,3
+    </select>
+
+    <sql id="allColumns">
+        SELECT ITEM_ID,ITEM_NAME,ITEM_PRICE,ITEM_COUNT,ITEM_CREATE_TIME,ITEM_DESC,ITEM_TYPE_ID,ITEM_SALE_PRICE,
+         ITEM_STATE,ITEM_IMAGE_MAIN,ITEM_IMAGE_OTHER,ITEM_VIDEO_URL,ITEM_HEART FROM item
+    </sql>
+    <!--findItemByItemId-->
+    <select id="findItemByItemId" resultMap="itemBaseResultMap" parameterType="int">
+        <include refid="allColumns"></include> WHERE ITEM_ID = #{VALUE}
+    </select>
+    <!--int addItem(Item item)  注意列名个数  与  值的个数相等  当前有12个值    ITEM_ID 由于设置了主键自增，所以
+        没处理   注意标点符号-->
+    <insert id="addItem" parameterType="Item">
+        INSERT INTO item (ITEM_NAME,ITEM_PRICE,ITEM_COUNT,ITEM_CREATE_TIME,ITEM_DESC,ITEM_TYPE_ID,ITEM_SALE_PRICE,
+        ITEM_STATE,ITEM_IMAGE_MAIN,ITEM_IMAGE_OTHER,ITEM_VIDEO_URL,ITEM_HEART) VALUES(#{itemName},#{itemPrice},#{itemCount},
+        #{itemCreateTime},#{itemDesc},#{itemTypeId},#{itemSalePrice},#{itemState},#{itemImageMain},#{itemImageOther},
+        #{itemVideoUrl},#{itemHeart})
+    </insert>
+    <!--int deleteItem(int itemId);-->
+    <delete id="deleteItem" parameterType="int">
+        DELETE FROM item WHERE ITEM_ID = #{VALUE }
+    </delete>
+
+    <!--findAllItemsByCondition(Item item); 根据条件查询电影信息-->
+    <select id="findAllItemsByCondition" resultMap="itemBaseResultMap" parameterType="Item">
+        <include refid="allColumns"></include>
+        <!-- 自动的将sql 片段中  第一个  AND  去除-->
+        <where>
+            <include refid="itemCondition"></include>
+        </where>
+    </select>
+    <!--查询条件有多个，可以自由拼接，
+    1.如果用户录入商品上架状态与否，则根据状态查询
+    2.如果用户录入，商品种类、商品名等，则进行多条件查询-->
+    <sql id="itemCondition">
+        <!-- 如果参数得到的商品编号是非0 非'' 非 null  则添加判断条件(int) -->
+        <if test="itemId!=0 and itemId!='' and itemId!=null">
+            AND ITEM_ID = #{itemId}
+        </if>
+        <!-- 如果参数得到的商品状态是非0 非'' 非 null  则添加判断条件(int) -->
+        <if test="itemState!=0 and itemState!='' and itemState!=null">
+            AND ITEM_STATE = #{itemState}
+        </if>
+        <!-- 如果参数得到的商品名是非'' 非 null  则添加判断条件(String)
+             商品名可能会是关键字检索的模糊查询  -->
+        <if test="itemName!='' and itemName!=null">
+            AND ITEM_NAME LIKE '%${itemName}%'
+        </if>
+    </sql>
+    <!--int updateItemStateByItemId(Item item);-->
+    <update id="updateItemStateByItemId" parameterType="Item">
+        UPDATE item SET ITEM_STATE = #{itemState} WHERE ITEM_ID=#{itemId}
+    </update>
+    <!--有可能有多条件修改 ，仿照上午的  where语句 片段，处理-->
+
+    <!--updateItemByItemId(Item item);-->
+    <update id="updateItemByItemId" parameterType="Item">
+        UPDATE item
+        <!-- set标签可以自动的去掉  最后一个,   -->
+        <set>
+            <include refid="updateItemSetCondition"></include>
+        </set>
+        WHERE ITEM_ID=#{itemId}
+    </update>
+
+    <!--修改需要使用的sql片段-->
+    <sql id="updateItemSetCondition">
+        <if test="itemName!='' and itemName!=null">
+            ITEM_NAME = #{itemName},
+        </if>
+        <if test="itemPrice!=0.0 and itemPrice!=null and itemPrice!=''">
+            ITEM_PRICE = #{itemPrice},
+        </if>
+        <if test="itemCount!=0 and itemCount!=null and itemCount!=''">
+            ITEM_COUNT = #{itemCount},
+        </if>
+        <if test="itemCreateTime!=null">
+            ITEM_CREATE_TIME = #{itemCreateTime},
+        </if>
+        <if test="itemDesc!='' and itemDesc!=null">
+            ITEM_DESC = #{itemDesc},
+        </if>
+        <if test="itemTypeId!=0 and itemTypeId!=null and itemTypeId!=''">
+            ITEM_TYPE_ID = #{itemTypeId},
+        </if>
+        <if test="itemSalePrice!=0.0 and itemSalePrice!=null and itemSalePrice!=''">
+            ITEM_SALE_PRICE = #{itemSalePrice},
+        </if>
+        <if test="itemState!=0 and itemState!=null and itemState!=''">
+            ITEM_STATE = #{itemState},
+        </if>
+        <if test="itemImageMain!=null and itemImageMain!=''">
+            ITEM_IMAGE_MAIN = #{itemImageMain},
+        </if>
+        <if test="itemImageOther!=null and itemImageOther!=''">
+            ITEM_IMAGE_OTHER = #{itemImageOther},
+        </if>
+        <if test="itemVideoUrl!=null and itemVideoUrl!=''">
+            ITEM_VIDEO_URL = #{itemVideoUrl},
+        </if>
+        <if test="itemHeart!=0 and itemHeart!=null and itemHeart!=''">
+            ITEM_HEART = #{itemHeart},
+        </if>
+    </sql>
+
+    <!--findItemsByKey(String key);   我们当前表中  商品类型用的是 int 类型 的  ITEM_TYPE_ID
+        如果想要根据关键字   模糊查询   注意 这个时候  需要进行  多表关联  （自己先尝试一下  ）
+        必须是上架的商品   要求 ITEM_STATE = 1  -->
+    <select id="findItemsByKey" resultMap="itemBaseResultMap" parameterType="String">
+        <include refid="allColumns"></include> WHERE (ITEM_NAME LIKE '%${key}%'
+         OR ITEM_DESC LIKE '%${key}%')
+         AND ITEM_STATE = 1
+    </select>
+
+    <sql id="baseColumns">
+        ITEM_ID,ITEM_NAME,ITEM_PRICE,ITEM_COUNT,ITEM_CREATE_TIME,ITEM_DESC,ITEM_TYPE_ID,ITEM_SALE_PRICE,
+         ITEM_STATE,ITEM_IMAGE_MAIN,ITEM_IMAGE_OTHER,ITEM_VIDEO_URL,ITEM_HEART
+    </sql>
+
+    <!--findItemsByKey2(@Param("key") String key);  该方法可以根据类别模糊查询-->
+    <select id="findItemsByKey2" resultMap="itemInfoAndItemTypeResultMap" parameterType="String">
+        SELECT <include refid="baseColumns"></include> ,TYPE_NAME,TYPE_DESC
+        FROM item i JOIN itemtype it USING (ITEM_TYPE_ID)
+          WHERE (ITEM_NAME LIKE '%${key}%'
+        OR ITEM_DESC LIKE '%${key}%' OR TYPE_NAME LIKE '%${key}%')
+        AND ITEM_STATE = 1
+    </select>
+</mapper>
